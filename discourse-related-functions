@@ -1,0 +1,126 @@
+        public function __construct()
+        {	//hook to add custom field data to discourse
+            add_filter( 'wpdc_sso_params', [$this, 'afm_set_discourse_custom_field'], 10, 2 );
+			add_filter( 'discourse_email_verification', [$this, 'av_discourse_email_verification'], 99, 2 );
+			add_filter( 'wpdc_sso_avatar_url', [$this, 'afm_use_custom_avatar'], 10, 2 );
+        }
+
+       public function __construct()
+        {	//hook to add custom field data to discourse
+            add_filter( 'wpdc_sso_params', [$this, 'afm_set_discourse_custom_field'], 10, 2 );
+			add_filter( 'discourse_email_verification', [$this, 'av_discourse_email_verification'], 99, 2 );
+			add_filter('wp_nav_menu_items', [$this, 'av_login_logout'], 10, 2); 
+			add_filter( 'wpdc_sso_avatar_url', [$this, 'afm_use_custom_avatar'], 10, 2 );
+        }
+		
+		
+		   public function afm_use_custom_avatar( $avatar_url, $user_id ) {
+				if ( get_user_meta( $user_id, 'mepr_profile_picture', true ) ) {
+					$avatar_url = get_user_meta( $user_id, 'mepr_profile_picture', true);
+				}else{
+					$avatar_url = "";
+				}
+
+				return $avatar_url;
+			}
+		
+// 		callback to add custom field data to discourse
+		public function afm_set_discourse_custom_field( $sso_params, $user ) {
+			$sso_params['external_name'] =  get_user_meta( $user->ID, 'first_name', true ). " ". get_user_meta( $user->ID, 'last_name', true );
+			$sso_params['custom.user_field_1'] = $user->user_login;
+			$sso_params['custom.user_field_2'] = get_user_meta( $user->ID, 'first_name', true );
+			$sso_params['custom.user_field_3'] = get_user_meta( $user->ID, 'last_name', true );
+			$sso_params['custom.user_field_4'] = $user->user_email;
+			$sso_params['custom.user_field_5'] = get_user_meta( $user->ID, 'mepr-address-one', true );
+			$sso_params['custom.user_field_6'] = get_user_meta( $user->ID, 'mepr-address-two', true );
+			$sso_params['custom.user_field_7'] = get_user_meta( $user->ID, 'mepr-address-city', true );
+			$sso_params['custom.user_field_8'] = get_user_meta( $user->ID, 'mepr-address-country', true );
+			$sso_params['custom.user_field_9'] = get_user_meta( $user->ID, 'mepr-address-state', true );
+			$sso_params['custom.user_field_10'] = get_user_meta( $user->ID, 'mepr-address-zip', true );
+			$sso_params['custom.user_field_11'] = get_user_meta( $user->ID, 'mepr_company_name', true );
+			$sso_params['custom.user_field_12'] = get_user_meta( $user->ID, 'mepr_home_telephone', true );
+			$sso_params['custom.user_field_13'] = get_user_meta( $user->ID, 'mepr_office_telephone', true );
+			$sso_params['custom.user_field_14'] = get_user_meta( $user->ID, 'mepr_cell_number', true );
+			$sso_params['custom.user_field_15'] = get_user_meta( $user->ID, 'mepr_fax_number', true );
+			$sso_params['custom.user_field_16'] = get_user_meta( $user->ID, 'mepr_airport_identifier', true );
+			$sso_params['custom.user_field_17'] = get_user_meta( $user->ID, 'mepr_total_flight_time', true );
+			$sso_params['custom.user_field_18'] = get_user_meta( $user->ID, 'mepr_total_tbm_time', true );
+			$sso_params['custom.user_field_19'] = get_user_meta( $user->ID, 'mepr_flight_hours_per_year', true );
+			$sso_params['custom.user_field_20'] = get_user_meta( $user->ID, 'mepr_ratings', true );
+			$sso_params['custom.user_field_21'] = get_user_meta( $user->ID, 'mepr_previous_aircraft', true );
+			$sso_params['custom.user_field_22'] = get_user_meta( $user->ID, 'mepr_occupation', true );
+			$sso_params['custom.user_field_23'] = get_user_meta( $user->ID, 'mepr_website', true );
+			$sso_params['custom.user_field_24'] = get_user_meta( $user->ID, 'mepr_interests', true );
+			$count = 1;
+			$primaries = array("mepr_primary_aircraft_aircraft_1", "mepr_primary_aircraft_aircraft_2", "mepr_primary_aircraft_aircraft_3");
+			foreach( $primaries as $primary){
+				if(get_user_meta( $user->ID, $primary , true) == "on" ){
+					if( get_user_meta( $user->ID, 'mepr_aircraft_type_aircraft_'.$count, true ) == 'select'){
+						$sso_params['custom.user_field_25'] = "";
+					}else{
+						$sso_params['custom.user_field_25'] = get_user_meta( $user->ID, 'mepr_aircraft_type_aircraft_'.$count, true );
+					}
+					
+					
+					if( get_user_meta( $user->ID, 'mepr_aircraft_type_aircraft_'.$count, true ) == 'Other'){
+						$sso_params['custom.user_field_25'] = get_user_meta( $user->ID, 'mepr_other_aircraft_type_aircraft_'.$count, true );
+					}
+					
+					$sso_params['custom.user_field_26'] = get_user_meta( $user->ID, 'mepr_tail_aircraft_'.$count, true );
+					$sso_params['custom.user_field_27'] = get_user_meta( $user->ID, 'mepr_serial_no_aircraft_'.$count, true );
+					$sso_params['custom.user_field_28'] = get_user_meta( $user->ID, 'mepr_model_year_aircraft_'.$count, true );
+					
+				} 
+			   $count++;
+			}
+			
+			if( get_user_meta( $user->ID, 'mepr_primary_aircraft_aircraft_1', true ) != "on" && get_user_meta( $user->ID, 'mepr_primary_aircraft_aircraft_2', true ) != "on" && get_user_meta( $user->ID, 'mepr_primary_aircraft_aircraft_3', true ) != "on" ){
+				
+				$sso_params['custom.user_field_25'] = "";
+				$sso_params['custom.user_field_26'] = "";
+				$sso_params['custom.user_field_27'] = "";
+				$sso_params['custom.user_field_28'] = "";
+				
+			}
+
+			return $sso_params;
+		}
+
+        //to disable discourse verification emails
+		public function av_discourse_email_verification( $require_activation, $user_id ) {
+			return false;
+		}
+
+new AFM_Discourse();
+
+
+add_action('get_header', function() {
+ 	if(is_page( 'curl-test' ) ){
+ 	$args = array("number" => 10, "offset" => 3260);
+ 	$myusers = get_users( $args );
+  	$count = 1;
+ 	foreach ( $myusers as $user ) {
+ 	    $rgroups = "Accountant,Aviation_Finance,Companion,Daher,Daher_Distributor,Daher_Service_Center,Executive_Director,Extra_Magazine_Recipient,Foundation_Director,Founder,Instructor-Mentor,Insurance_Professional,Kodiak_Owner,Maintenance-Non_TBM_Service_Center,Outside_Network,Professional_Pilot,Prospective_Owner,SIMCOM_Training_Forum_Access,Special_Access,TBM_Instructors_Forum_Access,TBMOPA_Chairman,TBMOPA_Director,TBMOPA_Vice_Chairman,TBMOPA_Safety_Advisor,TBMOPA_Safety_Committee,TBMOPA_Safety_Committee_Chairman,TBMOPA_Secretary_Treasurer,TBM_Owner,Temporary_Member,Vendor";
+        	WPDiscourse\Utilities\Utilities::remove_user_from_discourse_group( $user_id, $rgroups );
+ 		
+             $grouparr = get_user_meta( $user->ID, 'afm_member_type', true );
+             $group = array_diff($grouparr, array('REGISTERED'));
+             
+              $usergroup = implode(",", $group);
+              $trimmedUserGroup = trim($usergroup);
+              $finalUserGroup = str_replace(' ', '_', $trimmedUserGroup);
+             echo $finalUserGroup."<br>";
+             
+             //print_r($usergroup);
+ 			 $result = DiscourseUtilities::add_user_to_discourse_group( $user->ID, $finalUserGroup ); 
+ 			 print_r($result);
+ 			 
+ 				echo $count.'  <span>' . esc_html( $user->display_name ) . '</span> '.$user->ID."<br>";
+ 				
+ 				$count++;
+
+ 					  }
+		
+  	    
+
+     } 
