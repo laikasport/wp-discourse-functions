@@ -1,19 +1,34 @@
-        public function __construct()
-        {	//hook to add custom field data to discourse
-            add_filter( 'wpdc_sso_params', [$this, 'afm_set_discourse_custom_field'], 10, 2 );
-			add_filter( 'discourse_email_verification', [$this, 'av_discourse_email_verification'], 99, 2 );
-			add_filter( 'wpdc_sso_avatar_url', [$this, 'afm_use_custom_avatar'], 10, 2 );
-        }
+//   checks to see if member is active with on of these Memberpress memberships before SSO to Discourse
 
-       public function __construct()
+add_action( 'wpdc_sso_provider_before_sso_redirect', 'wpdc_custom_check_user_membership', 10, 2 );
+function wpdc_custom_check_user_membership( $user_id, $user ) {
+    $mepr_user = new MeprUser( $user_id );
+
+		if( $mepr_user->is_active_on_membership('1844') || $mepr_user->is_active_on_membership('1675') || $mepr_user->is_active_on_membership('1658') || $mepr_user->is_active_on_membership('1845') ) {
+			// Active
+		}else if($mepr_user->has_expired()) {
+			// 
+			  wp_safe_redirect( home_url() );
+
+	    exit;
+		}else {
+			// Never a member
+			 wp_safe_redirect( home_url() );
+
+	    exit;
+		} 
+}
+
+//  custom fields hook, email verification, custom avatar
+
+public function __construct()
         {	//hook to add custom field data to discourse
-            add_filter( 'wpdc_sso_params', [$this, 'afm_set_discourse_custom_field'], 10, 2 );
+            		add_filter( 'wpdc_sso_params', [$this, 'afm_set_discourse_custom_field'], 10, 2 );
 			add_filter( 'discourse_email_verification', [$this, 'av_discourse_email_verification'], 99, 2 );
-			add_filter('wp_nav_menu_items', [$this, 'av_login_logout'], 10, 2); 
 			add_filter( 'wpdc_sso_avatar_url', [$this, 'afm_use_custom_avatar'], 10, 2 );
         }
 		
-		
+// 	adds custom avatar to WP		
 		   public function afm_use_custom_avatar( $avatar_url, $user_id ) {
 				if ( get_user_meta( $user_id, 'mepr_profile_picture', true ) ) {
 					$avatar_url = get_user_meta( $user_id, 'mepr_profile_picture', true);
@@ -24,7 +39,7 @@
 				return $avatar_url;
 			}
 		
-// 		callback to add custom field data to discourse
+// 	adds custom field data to discourse
 		public function afm_set_discourse_custom_field( $sso_params, $user ) {
 			$sso_params['external_name'] =  get_user_meta( $user->ID, 'first_name', true ). " ". get_user_meta( $user->ID, 'last_name', true );
 			$sso_params['custom.user_field_1'] = $user->user_login;
@@ -86,13 +101,21 @@
 			return $sso_params;
 		}
 
-        //to disable discourse verification emails
+//  disables discourse verification emails
 		public function av_discourse_email_verification( $require_activation, $user_id ) {
 			return false;
 		}
 
-new AFM_Discourse();
+// disable user verification email discourse
+add_filter( 'discourse_email_verification', 'wpdc_custom_discourse_email_verification', 10, 2 );
+function wpdc_custom_discourse_email_verification( $require_activation, $user_id ) {
+    
+    return false;
+    
+}
 
+
+// adds or removes members from Discourse group lists based on their WP group status
 
 add_action('get_header', function() {
  	if(is_page( 'curl-test' ) ){
